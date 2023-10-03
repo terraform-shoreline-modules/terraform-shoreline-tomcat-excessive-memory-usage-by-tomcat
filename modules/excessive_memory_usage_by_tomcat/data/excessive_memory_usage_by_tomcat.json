@@ -1,0 +1,210 @@
+{
+  "name": "excessive_memory_usage_by_tomcat",
+  "description": "This incident type refers to the situation where the Tomcat server is utilizing more memory than it should, causing system instability and performance issues. This can happen due to a variety of factors such as memory leaks, improper configuration, or application code issues. It is important to address this incident promptly to prevent system failures and ensure optimal application performance.",
+  "params": [
+    {
+      "name": "OLD_MEMORY_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "TOMCAT_CONFIG_DIR",
+      "value": ""
+    },
+    {
+      "name": "PID",
+      "value": ""
+    },
+    {
+      "name": "NEW_THREAD_COUNT",
+      "value": ""
+    },
+    {
+      "name": "NEW_MEMORY_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "TOMCAT_GROUP",
+      "value": ""
+    },
+    {
+      "name": "TOMCAT_USER",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Excessive memory usage by Tomcat.\nThis incident type refers to the situation where the Tomcat server is utilizing more memory than it should, causing system instability and performance issues. This can happen due to a variety of factors such as memory leaks, improper configuration, or application code issues. It is important to address this incident promptly to prevent system failures and ensure optimal application performance."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current memory usage"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `free -m`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the processes running on the system"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Find the PID of Tomcat"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux | grep tomcat`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the memory usage of Tomcat"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `pmap -x ${PID}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Java version that Tomcat is running on"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps -ef | grep tomcat | grep -v grep | awk '{print $11}' | xargs -r readlink -f | xargs -r dirname | xargs -r dirname | xargs -r readlink -f | xargs -r -I {} {}/bin/java -version`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Tomcat configuration"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `cat /etc/tomcat/server.xml`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Tomcat log files for errors or warnings"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -n 100 /var/log/tomcat/catalina.out`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the heap usage of Tomcat"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `jstat -gcutil ${PID} 1000`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the thread usage of Tomcat"
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `jstack -l ${PID} | grep -Ei 'daemon|java.lang.Thread.State'`"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check for any memory leaks"
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `jmap -histo:live ${PID} | head -n 20`"
+    },
+    {
+      "name": "cell_22",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the JVM arguments that are being used by Tomcat"
+    },
+    {
+      "name": "cell_23",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps -ef | grep tomcat | grep -v grep | awk '{print $11}' | xargs -r readlink -f | xargs -r dirname | xargs -r dirname | xargs -r readlink -f | xargs -r -I {} {}/bin/java -XX:+PrintFlagsFinal -version | grep -Ei 'heapsize|stacksize|metaspacesize|direct|verbose'`"
+    },
+    {
+      "name": "cell_24",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the memory allocation for the Tomcat server."
+    },
+    {
+      "name": "cell_25",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_increase_tomcat_memory($OLD_MEMORY_LIMIT, $NEW_MEMORY_LIMIT)"
+    },
+    {
+      "name": "cell_26",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Reduce the number of threads used by Tomcat."
+    },
+    {
+      "name": "cell_27",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_tomcat_config_edit($TOMCAT_CONFIG_DIR, $NEW_THREAD_COUNT, $TOMCAT_GROUP, $TOMCAT_USER)"
+    }
+  ]
+}
